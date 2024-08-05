@@ -14,4 +14,4 @@
 To install **pytomfig**, you can use pip. Ensure you have Python 3.6+ installed, then run:
 
 ```bash
-pip install pytomfig
+pip install pytomfig-Sluke950==0.0.1
