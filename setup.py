@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='tomfig',
+    name='pytomfig',
     version='0.1',
     packages=find_packages(),
     install_requires=[],  # Add your dependencies here
@@ -10,7 +10,7 @@ setup(
     description='A short description of your application',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/example_app',
+    url='https://github.com/Sluke950/pytomfig',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
