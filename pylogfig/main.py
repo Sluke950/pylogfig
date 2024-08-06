@@ -2,6 +2,7 @@ import tomllib
 import json
 import yaml
 import xml.etree.ElementTree as ET
+import configparser
 from dotenv import dotenv_values
 import os
 import logging
@@ -56,13 +57,11 @@ class Config:
                 return Config.parse_properties_file(file_path)
             elif file_extension == '.env':  # .env files
                 return Config.parse_env_file(file_path)
-            elif file_extension == '.sh' or file_extension == '.bash':  # Shell files
-                return Config.parse_bash_file(file_path)
             elif file_extension == '.config':  # Config files
                 raise ConfigParseError(f"Must specify file extension to parse as for '.config' file '{file_path}'.")
             else:
                 raise ConfigParseError(
-                    f"Invalid file extension: {file_path}. Expected a '.toml', '.json', '.yaml', '.ini', '.xml', '.properties', '.env', '.sh', or '.config' file.")
+                    f"Invalid file extension: {file_path}. Expected a '.toml', '.json', '.yaml', '.ini', '.xml', '.properties', '.env', or '.config' file.")
 
         except Exception as e:
             LOGGER.exception(f'Could not load configuration.')
@@ -70,13 +69,15 @@ class Config:
 
     @staticmethod
     def parse_ini_file(file_path):
-        """Parse INI-like file."""
-        config = Config.Config()
+        """Parse INI file and return a dictionary of its contents."""
+        config = configparser.ConfigParser()
         try:
             config.read(file_path)
-            return {f"{section}.{key}": value for section in config.sections() for key, value in config.items(section)}
-        except (Config.Error, FileNotFoundError) as e:
-            raise ConfigParseError(f"Failed to parse INI file: {e}")
+            # Convert the INI file content to a nested dictionary
+            config_dict = {section: dict(config.items(section)) for section in config.sections()}
+            return config_dict
+        except (configparser.Error, FileNotFoundError) as e:
+            raise ValueError(f"Failed to parse INI file '{file_path}': {e}")
 
     @staticmethod
     def parse_xml_file(file_path):
@@ -119,26 +120,10 @@ class Config:
     def parse_toml_file(file_path):
         """Parse TOML file."""
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, 'rb') as file:
                 return tomllib.load(file)
         except (tomllib.TOMLDecodeError, FileNotFoundError) as e:
             raise ConfigParseError(f"Failed to parse TOML file: {e}")
-
-    @staticmethod
-    def parse_bash_file(file_path):
-        config_dict = {}
-        with open(file_path, 'r') as file:
-            for line in file:
-                # Skip comments and empty lines
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-
-                # Split line into key and value
-                if '=' in line:
-                    key, value = line.split('=', 1)
-                    config_dict[key.strip()] = value.strip()
-        return config_dict
 
     @staticmethod
     def parse_env_file(file_path):
@@ -187,13 +172,14 @@ class Config:
         if self._logging_config:
             logging.config.dictConfig(self._logging_config)
 
-    def get(self, key, default=None):
-        keys = key.split('.')
+    def get(self, key=None, default=None):
         value = self._config
-        for key in keys:
-            value = value.get(key, default)
-            if value is None:
-                LOGGER.warn(f'No value found for [{key}], using default.')
-                return default
+        if key:
+            keys = key.split('.')
+            for key in keys:
+                value = value.get(key, default)
+                if value is None:
+                    LOGGER.warn(f'No value found for [{key}], using default.')
+                    return default
         LOGGER.debug(f'Value [{value}] found for key [{key}].')
         return value
