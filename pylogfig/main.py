@@ -16,15 +16,20 @@ class Config:
         return cls._instance
 
     def _setup(self, config_file_path, logging_config_file_path):
-        self.config = self._load_config(config_file_path)
-        self.logging_config = self._load_config(
-            logging_config_file_path) if logging_config_file_path else None
+        self._config = self._load_config(config_file_path)
+        self._logging_config = (
+            self._load_config(logging_config_file_path)
+            if logging_config_file_path
+            else None
+        )
+        if self._logging_config:
+            logging.config.dictConfig(self._logging_config)
 
     def _load_config(self, file_path):
         try:
             file_extension = os.path.splitext(file_path)[1]
 
-            LOGGER.debug(f'Loading {file_extension} file {file_path}.')
+            LOGGER.debug(f"Loading '{file_extension}' file '{file_path}'.")
             if file_extension == '.toml':  # TOML files
                 with open(file_path, 'rb') as file:
                     return tomllib.load(file)
@@ -54,9 +59,21 @@ class Config:
             LOGGER.exception(f'Could not load configuration.')
             raise
 
+    def load_logging_config(self, input):
+        if isinstance(input, dict):
+            self._logging_config = input
+            LOGGER.debug('Loaded logging configuration from dictionary.')
+        elif isinstance(input, str):
+            self._logging_config = self._load_config(input)
+            LOGGER.debug(
+                f"Loaded logging configuration from filepath '{input}'.")
+        else:
+            raise TypeError(
+                f"Expected type 'dict' or 'str' for input, got {type(input)}")
+
     def get(self, key, default=None):
         keys = key.split('.')
-        value = self.config
+        value = self._config
         for key in keys:
             value = value.get(key, default)
             if value is None:
