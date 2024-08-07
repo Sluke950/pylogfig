@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pylogfig_Sluke950"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="Luke Shuttleworth", email="Sluke950@gmail.com" },
 ]
@@ -15,6 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
